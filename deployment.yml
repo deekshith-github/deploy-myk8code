@@ -4,7 +4,6 @@ metadata:
   name: nginix-image
   labels: 
      app: regapp
-
 spec:
   replicas: 2 
   selector:
@@ -32,11 +31,8 @@ metadata:
 spec:
   selector:
     app: regapp 
-
   ports:
     - port: 8080
       targetPort: 8080
-	  protocol: TCP
-
+      protocol: TCP
   type: LoadBalancer		
-		
