@@ -9,7 +9,6 @@ spec:
   selector:
     matchLabels:
       app: regapp
-
   template:
     metadata:
       labels:
@@ -17,7 +16,7 @@ spec:
     spec:
       containers:
       - name: regapp
-        image: valaxy/regapp
+        image: kottedeek/nginix-test
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
