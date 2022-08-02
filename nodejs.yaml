@@ -1,0 +1,42 @@
+pipeline {
+    agent any
+        environment {
+        AWS_ACCOUNT_ID="991163287510"
+        AWS_DEFAULT_REGION="us-east-1" 
+        IMAGE_REPO_NAME="nodejs"
+        IMAGE_TAG="latest"
+        REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
+    }
+    stages {
+        stage('login into ecr') {
+            steps {
+                sh "aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
+    
+            }
+        
+        }
+        stage('colne repo') {
+            steps {
+               checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'deekshith-github', url: 'https://github.com/deekshith-github/deploy-myk8code.git']]])
+            }
+        }
+        stage('Build image') {
+            steps {
+                sh 'docker build -t ${IMAGE_REPO_NAME} .'
+            }
+        }
+        stage('push to ecr') {
+            steps {
+               sh "docker tag ${IMAGE_REPO_NAME}:${IMAGE_TAG} ${REPOSITORY_URI}:latest"
+               sh "docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}:latest" 
+            }
+        }
+        stage('Deploy to eks') {
+            steps {
+              withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'kubectlnewconfig', namespace: '', serverUrl: '') {
+              sh "kubectl apply -f deployment.yaml"
+              }
+             }
+        }        
+    }
+}
